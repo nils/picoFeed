@@ -68,6 +68,7 @@ class Config
      * @var array
      */
     private $container = array();
+    private $callCache = array();
 
     /**
      * Magic method to have any kind of setters or getters.
@@ -79,9 +80,21 @@ class Config
      */
     public function __call($name, array $arguments)
     {
-        $name = strtolower($name);
-        $prefix = substr($name, 0, 3);
-        $parameter = substr($name, 3);
+        $callCacheEntry = null;
+        if(!array_key_exists($name,$this->callCache)) {
+          $xname = strtolower($name);
+          $prefix = substr($xname, 0, 3);
+          $parameter = substr($xname, 3);
+          $callCacheEntry = array("prefix" => $prefix,"parameter" => $parameter );
+          $this->callCache[$name] = $callCacheEntry;
+        } else {
+          $callCacheEntry = $this->callCache[$name];
+          $prefix = $callCacheEntry["prefix"];
+          $parameter = $callCacheEntry["parameter"];
+        }
+
+
+
 
         if ($prefix === 'set' && isset($arguments[0])) {
             $this->container[$parameter] = $arguments[0];
