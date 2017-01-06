@@ -60,14 +60,14 @@ abstract class Parser implements ParserInterface
      *
      * @var array
      */
-    protected $namespaces = array();
+    public $namespaces = array();
 
     /**
      * XML namespaces used in document.
      *
      * @var array
      */
-    protected $used_namespaces = array();
+    public $used_namespaces = array();
 
     /**
      * Item Post Processor instance
@@ -75,7 +75,7 @@ abstract class Parser implements ParserInterface
      * @access private
      * @var ItemPostProcessor
      */
-    private $itemPostProcessor;
+    public $itemPostProcessor;
 
     /**
      * Constructor.
@@ -167,6 +167,55 @@ abstract class Parser implements ParserInterface
             $this->itemPostProcessor->execute($feed, $item);
             $feed->items[] = $item;
         }
+
+        Logger::setMessage(get_called_class().PHP_EOL.$feed);
+
+        return $feed;
+    }
+
+    /**
+     * Parse the document and return a lazy feed object.
+     *
+     * @return \PicoFeed\Parser\Feed
+     */
+    public function executeLazy()
+    {
+        Logger::setMessage(get_called_class().': begin parsing');
+
+        $xml = XmlParser::getSimpleXml($this->content);
+
+        if ($xml === false) {
+            Logger::setMessage(get_called_class().': Applying XML workarounds');
+            $this->content = Filter::normalizeData($this->content);
+            $xml = XmlParser::getSimpleXml($this->content);
+
+            if ($xml === false) {
+                Logger::setMessage(get_called_class().': XML parsing error');
+                Logger::setMessage(XmlParser::getErrors());
+                throw new MalformedXmlException('XML parsing error');
+            }
+        }
+
+        $this->used_namespaces = $xml->getNamespaces(true);
+        $xml = $this->registerSupportedNamespaces($xml);
+
+        $feed = new LazyFeed($this, $xml);
+
+        $this->findFeedUrl($xml, $feed);
+        $this->checkFeedUrl($feed);
+
+        $this->findSiteUrl($xml, $feed);
+        $this->checkSiteUrl($feed);
+
+        $this->findFeedTitle($xml, $feed);
+        $this->findFeedDescription($xml, $feed);
+        $this->findFeedLanguage($xml, $feed);
+        $this->findFeedId($xml, $feed);
+        $this->findFeedDate($xml, $feed);
+        $this->findFeedLogo($xml, $feed);
+        $this->findFeedIcon($xml, $feed);
+
+
 
         Logger::setMessage(get_called_class().PHP_EOL.$feed);
 

@@ -17,7 +17,7 @@ class Rss20 extends Parser
     /**
      * Supported namespaces.
      */
-    protected $namespaces = array(
+    public $namespaces = array(
         'dc' => 'http://purl.org/dc/elements/1.1/',
         'content' => 'http://purl.org/rss/1.0/modules/content/',
         'feedburner' => 'http://rssnamespace.org/feedburner/ext/1.0',
